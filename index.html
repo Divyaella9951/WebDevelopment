@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    .container {
+      margin-top: 40px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.4);
+      width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .task-input {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .task-input input {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #fff;
+      color: #333;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #ff4081;
+      color: #fff;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background: rgba(255,255,255,0.2);
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li.completed {
+      text-decoration: line-through;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .actions button {
+      margin-left: 5px;
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+
+    small {
+      display: block;
+      font-size: 12px;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 To-Do App</h1>
+    <div class="task-input">
+      <input type="text" id="taskTitle" placeholder="Enter task...">
+      <input type="datetime-local" id="taskDateTime">
+      <button onclick="addTask()">Add Task</button>
+    </div>
+    <ul id="taskList"></ul>
+  </div>
+
+  <script>
+    let taskList = document.getElementById("taskList");
+
+    // Load saved tasks
+    window.onload = loadTasks;
+
+    function addTask() {
+      let title = document.getElementById("taskTitle").value;
+      let dateTime = document.getElementById("taskDateTime").value;
+
+      if (title.trim() === "") {
+        alert("Please enter a task!");
+        return;
+      }
+
+      let task = {
+        id: Date.now(),
+        title: title,
+        dateTime: dateTime,
+        completed: false
+      };
+
+      saveTask(task);
+      renderTask(task);
+
+      document.getElementById("taskTitle").value = "";
+      document.getElementById("taskDateTime").value = "";
+    }
+
+    function renderTask(task) {
+      let li = document.createElement("li");
+      li.setAttribute("data-id", task.id);
+      if (task.completed) li.classList.add("completed");
+
+      li.innerHTML = `
+        <div>
+          <span>${task.title}</span>
+          ${task.dateTime ? `<small>${new Date(task.dateTime).toLocaleString()}</small>` : ""}
+        </div>
+        <div class="actions">
+          <button onclick="toggleComplete(${task.id})">✔</button>
+          <button onclick="editTask(${task.id})">✏</button>
+          <button onclick="deleteTask(${task.id})">🗑</button>
+        </div>
+      `;
+
+      taskList.appendChild(li);
+    }
+
+    function toggleComplete(id) {
+      let tasks = getTasks();
+      tasks = tasks.map(task => {
+        if (task.id === id) task.completed = !task.completed;
+        return task;
+      });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      reloadTasks();
+    }
+
+    function editTask(id) {
+      let tasks = getTasks();
+      let task = tasks.find(t => t.id === id);
+
+      let newTitle = prompt("Edit task:", task.title);
+      if (newTitle !== null && newTitle.trim() !== "") {
+        task.title = newTitle;
+      }
+
+      let newDateTime = prompt("Edit date & time (YYYY-MM-DD HH:MM):", task.dateTime);
+      if (newDateTime !== null && newDateTime.trim() !== "") {
+        task.dateTime = newDateTime;
+      }
+
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      reloadTasks();
+    }
+
+    function deleteTask(id) {
+      let tasks = getTasks();
+      tasks = tasks.filter(task => task.id !== id);
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      reloadTasks();
+    }
+
+    function saveTask(task) {
+      let tasks = getTasks();
+      tasks.push(task);
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function getTasks() {
+      return localStorage.getItem("tasks") ? JSON.parse(localStorage.getItem("tasks")) : [];
+    }
+
+    function loadTasks() {
+      let tasks = getTasks();
+      tasks.forEach(task => renderTask(task));
+    }
+
+    function reloadTasks() {
+      taskList.innerHTML = "";
+      loadTasks();
+    }
+  </script>
+</body>
+</html>
